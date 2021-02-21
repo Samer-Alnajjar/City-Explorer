@@ -28,5 +28,7 @@ provide the client th ability to search for cities names and provide him the wea
 01-01-2001 4:59pm - Application now has a fully-functional express server, with a GET route for the location resource.
 -->
 
+- 2/21/2021 3:15 Pm - Application now has function to request a city and it will get the longitude and latitude for that location
+
 ## Credits and Collaborations
 <!-- Give credit (and a link) to other people or resources that helped you build this application. -->

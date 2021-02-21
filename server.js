@@ -14,22 +14,51 @@ require("dotenv").config();
 const PORT = process.env.PORT;
 
 // Routes - endpoints
-app.get("/location", handleLocation)
+//Location routes
+app.get("/location", handleLocation);
+
+// Weather routes
+app.get("/weather", handleWeather);
 
 
-// Handler function
-function handleLocation(req,res) {
+// weatherHandler function
+function handleWeather(req, res) {
+  // Accessing the weather.json and store it in weatherData
+  let weatherObject = getWeatherData();
+  res.status(200).send(weatherObject);
+}
+
+// locationHandler function
+function handleLocation(req, res) {
   // Get the data array from JSON
   let searchQuery = req.query.city;
   // Accessing the location.json and store it in locationData
-  let locationObject =  getLocationData(searchQuery);
+  let locationObject = getLocationData(searchQuery);
   res.status(200).send(locationObject);
 }
 
 
-// Handle data from function
+// Handle weather data from function
+function getWeatherData() {
+
+  // Get values from object
+  let weatherData = require("./data/weather.json");
+  let weatherArray = weatherData.data;
+  let arrayOfObjects = [];
+  // create data object
+  for (let i = 0; i < weatherArray.length; i++) {
+    let currentDate = new Date(weatherArray[i].valid_date).toString();
+    let modifiedDate = currentDate.split(" ").splice(0, 4).join(" ");
+    let responseObject = new Weather(weatherArray[i].weather.description, modifiedDate);
+    arrayOfObjects.push(responseObject);
+  }
+  return arrayOfObjects;
+}
+
+
+// Handle location data from function
 function getLocationData(searchQuery) {
-  
+
   let locationData = require("./data/location.json");
   // Get values from object
   let longitude = locationData[0].lon;
@@ -48,8 +77,13 @@ function CityLocation(searchQuery, displayName, lat, lon) {
   this.longitude = lon;
 }
 
+function Weather(description, time) {
+  this.forecast = description;
+  this.time = time
+}
+
 
 // Listener
-app.listen(PORT,() => {
+app.listen(PORT, () => {
   console.log(`The server is listening to PORT ${PORT}`);
 });
