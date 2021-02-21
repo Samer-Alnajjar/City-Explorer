@@ -21,6 +21,8 @@ provide the client th ability to search for cities names and provide him the wea
 <!-- Provide a detailed description of the application design. What technologies (languages, libraries, etc) you're using, and any other relevant design information. -->
 - Node.js
 - Express
+- dotenv
+- cors
 
 ## Change Log
 <!-- Use this area to document the iterative changes made to your application as each feature is successfully implemented. Use time stamps. Here's an examples:
@@ -29,6 +31,8 @@ provide the client th ability to search for cities names and provide him the wea
 -->
 
 - 2/21/2021 3:15 Pm - Application now has function to request a city and it will get the longitude and latitude for that location
+
+- 2/21/2021 4:30 Pm - Application now has a function to send the weather data when accessing the weather route.
 
 ## Credits and Collaborations
 <!-- Give credit (and a link) to other people or resources that helped you build this application. -->
