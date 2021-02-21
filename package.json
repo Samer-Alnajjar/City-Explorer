@@ -16,5 +16,9 @@
   "bugs": {
     "url": "https://github.com/Samer-Alnajjar/City-Explorer/issues"
   },
-  "homepage": "https://github.com/Samer-Alnajjar/City-Explorer#readme"
+  "homepage": "https://github.com/Samer-Alnajjar/City-Explorer#readme",
+  "dependencies": {
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1"
+  }
 }
