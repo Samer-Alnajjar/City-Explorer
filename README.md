@@ -36,3 +36,28 @@ provide the client th ability to search for cities names and provide him the wea
 
 ## Credits and Collaborations
 <!-- Give credit (and a link) to other people or resources that helped you build this application. -->
+
+
+
+Number and name of feature: Location data
+
+Estimate of time needed to complete: 2 hour
+
+Start time: 1:30
+
+Finish time: 3:30
+
+Actual time needed to complete: 2:00
+
+===========================================================
+
+
+Number and name of feature: Weather data
+
+Estimate of time needed to complete: 2 hour
+
+Start time: 3:30
+
+Finish time: 4:20
+
+Actual time needed to complete: 0:50
