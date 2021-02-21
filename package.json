@@ -1,0 +1,20 @@
+{
+  "name": "city-explorer",
+  "version": "1.0.0",
+  "description": "Samer's project",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Samer-Alnajjar/City-Explorer.git"
+  },
+  "author": "Samer Alnajjar",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Samer-Alnajjar/City-Explorer/issues"
+  },
+  "homepage": "https://github.com/Samer-Alnajjar/City-Explorer#readme"
+}
