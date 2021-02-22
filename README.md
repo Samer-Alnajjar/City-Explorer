@@ -75,3 +75,17 @@ Start time: 1:40
 Finish time: 3:00
 
 Actual time needed to complete: 1:20
+
+
+===========================================================
+
+
+Number and name of feature: Weather data from API
+
+Estimate of time needed to complete: 2 hour
+
+Start time: 3:00
+
+Finish time: 5:00
+
+Actual time needed to complete: 2:00
