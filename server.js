@@ -24,15 +24,17 @@ app.get("/weather", handleWeather);
 // Any other routes
 app.get('*', (req, res) => {
   res.status(404).send('Sorry, the page you are trying to access does not exist....');
-}); 
-
+});
 
 
 // weatherHandler function
 function handleWeather(req, res) {
+  // Get the data from req
+  let searchQuery = req.query.search_query;
+  // let searchQuery2 = req.query.longitude;
+  // console.log(searchQuery);
   // Accessing the weather.json and store it in weatherData
-  let weatherObject = getWeatherData();
-  res.status(200).send(weatherObject);
+  getWeatherData(searchQuery, res);
 }
 
 // locationHandler function
@@ -46,29 +48,68 @@ function handleLocation(req, res) {
 
 
 // Handle weather data from function
-function getWeatherData() {
+function getWeatherData(searchQuery, res) {
 
-  // Get values from object
+  // Using Data from API
 
-  let weatherData = require("./data/weather.json");
-  let weatherArray = weatherData.data;
-  let arrayOfObjects = [];
-  // create data object
-  for (let i = 0; i < weatherArray.length; i++) {
-    let currentDate = new Date(weatherArray[i].valid_date).toString();
-    let modifiedDate = currentDate.split(" ").splice(0, 4).join(" ");
-    let responseObject = new Weather(weatherArray[i].weather.description, modifiedDate);
-    arrayOfObjects.push(responseObject);
+  let query = {
+    city: searchQuery,
+    key: process.env.WEATHER_API_KEY,
   }
-  return arrayOfObjects;
+  let url = `https://api.weatherbit.io/v2.0/forecast/daily`;
+
+
+
+  superagent.get(url).query(query).then(weatherData => {
+
+    try {
+      console.log(weatherData);
+      let weatherArray = weatherData.body.data;
+      let arrayOfObjects = [];
+
+      weatherArray.map((value) => {
+        let currentDate = new Date(value.valid_date).toString();
+        let modifiedDate = currentDate.split(" ").splice(0, 4).join(" ");
+        let responseObject = new Weather(value.weather.description, modifiedDate);
+        arrayOfObjects.push(responseObject);
+      })
+
+      // for (let i = 0; i < weatherArray.length; i++) {
+      //   let currentDate = new Date(weatherArray[i].valid_date).toString();
+      //   let modifiedDate = currentDate.split(" ").splice(0, 4).join(" ");
+      //   let responseObject = new Weather(weatherArray[i].weather.description, modifiedDate);
+      //   arrayOfObjects.push(responseObject);
+      // }
+
+      res.status(200).send(arrayOfObjects);
+    } catch {
+      res.status(500).send("Sorry, something went wrong");
+    }
+  }).catch(() => {
+    res.status(500).send("Sorry, something went wrong");
+  });
+
+  // Get values from object (Old way from lab06)
+
+  // let weatherData = require("./data/weather.json");
+  // let weatherArray = weatherData.data;
+  // let arrayOfObjects = [];
+  // for (let i = 0; i < weatherArray.length; i++) {
+  //   let currentDate = new Date(weatherArray[i].valid_date).toString();
+  //   let modifiedDate = currentDate.split(" ").splice(0, 4).join(" ");
+  //   let responseObject = new Weather(weatherArray[i].weather.description, modifiedDate);
+  //   arrayOfObjects.push(responseObject);
+  // }
+  // return arrayOfObjects;
 }
 
 
 // Handle location data from function
 function getLocationData(searchQuery, res) {
 
+  // Using Data from API
   const query = {
-    key: process.env.GEOCODE_API_KEY, 
+    key: process.env.GEOCODE_API_KEY,
     q: searchQuery,
     limit: 1,
     format: 'json'
@@ -85,14 +126,14 @@ function getLocationData(searchQuery, res) {
       let longitude = data.body[0].lon;
       let latitude = data.body[0].lat;
       let displayName = data.body[0].display_name;
-  
+
       // Creating an object using these data
       let responseObject = new CityLocation(searchQuery, longitude, latitude, displayName);
-      res.status(200).send(responseObject) ;
+      res.status(200).send(responseObject);
     } catch {
       res.status(500).send("Sorry, something went wrong");
-    } 
-  }).catch( () => {
+    }
+  }).catch(() => {
     res.status(500).send("Sorry, something went wrong");
   });
 
