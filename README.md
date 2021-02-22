@@ -61,3 +61,17 @@ Start time: 3:30
 Finish time: 4:20
 
 Actual time needed to complete: 0:50
+
+
+===========================================================
+
+
+Number and name of feature: Location data from API
+
+Estimate of time needed to complete: 2 hour
+
+Start time: 1:40
+
+Finish time: 3:00
+
+Actual time needed to complete: 1:20
