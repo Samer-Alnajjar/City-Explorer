@@ -3,6 +3,7 @@
 
 const express = require("express");
 const cors = require('cors');
+const superagent = require('superagent');
 
 
 //Initialization and configuration 
@@ -20,6 +21,12 @@ app.get("/location", handleLocation);
 // Weather routes
 app.get("/weather", handleWeather);
 
+// Any other routes
+app.get('*', (req, res) => {
+  res.status(404).send('Sorry, the page you are trying to access does not exist....');
+}); 
+
+
 
 // weatherHandler function
 function handleWeather(req, res) {
@@ -33,8 +40,8 @@ function handleLocation(req, res) {
   // Get the data array from JSON
   let searchQuery = req.query.city;
   // Accessing the location.json and store it in locationData
-  let locationObject = getLocationData(searchQuery);
-  res.status(200).send(locationObject);
+  getLocationData(searchQuery, res);
+  // res.status(200).send(locationObject);
 }
 
 
@@ -42,6 +49,7 @@ function handleLocation(req, res) {
 function getWeatherData() {
 
   // Get values from object
+
   let weatherData = require("./data/weather.json");
   let weatherArray = weatherData.data;
   let arrayOfObjects = [];
@@ -57,24 +65,54 @@ function getWeatherData() {
 
 
 // Handle location data from function
-function getLocationData(searchQuery) {
+function getLocationData(searchQuery, res) {
 
-  let locationData = require("./data/location.json");
-  // Get values from object
-  let longitude = locationData[0].lon;
-  let latitude = locationData[0].lat;
-  let displayName = locationData[0].display_name;
-  // create data object  
-  let responseObject = new CityLocation(searchQuery, displayName, latitude, longitude);
-  return responseObject;
+  const query = {
+    key: process.env.GEOCODE_API_KEY, 
+    q: searchQuery,
+    limit: 1,
+    format: 'json'
+  }
+
+  let url = `https://us1.locationiq.com/v1/search.php`
+  superagent.get(url).query(query).then(data => {
+    // It's recommended to log the data to see the structure of the data you are getting
+    // We added .body because it will retain the header and the body and for now we need just the body
+
+    // Checking if my code is correct
+    try {
+      // Getting the data from the object
+      let longitude = data.body[0].lon;
+      let latitude = data.body[0].lat;
+      let displayName = data.body[0].display_name;
+  
+      // Creating an object using these data
+      let responseObject = new CityLocation(searchQuery, longitude, latitude, displayName);
+      res.status(200).send(responseObject) ;
+    } catch {
+      res.status(500).send("Sorry, something went wrong");
+    } 
+  }).catch( () => {
+    res.status(500).send("Sorry, something went wrong");
+  });
+
+  // Old code (lab-06)
+  // let locationData = require("./data/location.json");
+  // // Get values from object
+  // let longitude = locationData[0].lon;
+  // let latitude = locationData[0].lat;
+  // let displayName = locationData[0].display_name;
+  // // create data object  
+  // let responseObject = new CityLocation(searchQuery, longitude, latitude, displayName);
+  // return responseObject;
 }
 
 // Constructors
-function CityLocation(searchQuery, displayName, lat, lon) {
+function CityLocation(searchQuery, longitude, latitude, displayName) {
   this.search_query = searchQuery;
   this.formatted_query = displayName;
-  this.latitude = lat;
-  this.longitude = lon;
+  this.latitude = latitude;
+  this.longitude = longitude;
 }
 
 function Weather(description, time) {
