@@ -21,6 +21,9 @@ app.get("/location", handleLocation);
 // Weather routes
 app.get("/weather", handleWeather);
 
+// parks routes
+app.get("/parks", handlePark);
+
 // Any other routes
 app.get('*', (req, res) => {
   res.status(404).send('Sorry, the page you are trying to access does not exist....');
@@ -46,24 +49,61 @@ function handleLocation(req, res) {
   // res.status(200).send(locationObject);
 }
 
+// parkHandler function
+function handlePark(req, res) {
+  // Get the data array from JSON
+  let searchQuery = req.query.search_query;
+  // Accessing the location.json and store it in locationData
+  getParksData(searchQuery, res);
+  // res.status(200).send(locationObject);
+}
+
+function getParksData(searchQuery, res) {
+
+  // Using Data from API
+  let query = {
+    q: searchQuery,
+    api_key: process.env.PARKS_API_KEY
+  };
+  let url = "https://developer.nps.gov/api/v1/parks";
+  superagent.get(url).query(query).then((parkData) => {
+    try {
+      let parksArray = parkData.body.data;
+      let arrayOfObjects = [];
+
+      parksArray.forEach(value => {
+        let name = value.fullName;
+        let address = value.addresses[0].line1 + " " + value.addresses[0].city + " " + value.addresses[0].stateCode + " " + value.addresses[0].postalCode;
+        console.log(address);
+        let fee = value.entranceFees[0].cost;
+        let description = value.description;
+        let url = value.url;
+        let responseObject = new Park(name, address, fee, description, url);
+        arrayOfObjects.push(responseObject);
+        console.log(arrayOfObjects);
+      })
+      res.status(200).send(arrayOfObjects);
+    } catch {
+      res.status(500).send("Sorry, something went wrong");
+    }
+  }).catch((error) => {
+    res.status(500).send("Sorry, something went wrong from promise" + error);
+  });
+}
+
+
 
 // Handle weather data from function
 function getWeatherData(searchQuery, res) {
 
   // Using Data from API
-
   let query = {
     city: searchQuery,
     key: process.env.WEATHER_API_KEY,
   }
   let url = `https://api.weatherbit.io/v2.0/forecast/daily`;
-
-
-
   superagent.get(url).query(query).then(weatherData => {
-
     try {
-      console.log(weatherData);
       let weatherArray = weatherData.body.data;
       let arrayOfObjects = [];
 
@@ -73,14 +113,6 @@ function getWeatherData(searchQuery, res) {
         let responseObject = new Weather(value.weather.description, modifiedDate);
         arrayOfObjects.push(responseObject);
       })
-
-      // for (let i = 0; i < weatherArray.length; i++) {
-      //   let currentDate = new Date(weatherArray[i].valid_date).toString();
-      //   let modifiedDate = currentDate.split(" ").splice(0, 4).join(" ");
-      //   let responseObject = new Weather(weatherArray[i].weather.description, modifiedDate);
-      //   arrayOfObjects.push(responseObject);
-      // }
-
       res.status(200).send(arrayOfObjects);
     } catch {
       res.status(500).send("Sorry, something went wrong");
@@ -88,7 +120,6 @@ function getWeatherData(searchQuery, res) {
   }).catch(() => {
     res.status(500).send("Sorry, something went wrong");
   });
-
   // Get values from object (Old way from lab06)
 
   // let weatherData = require("./data/weather.json");
@@ -159,6 +190,14 @@ function CityLocation(searchQuery, longitude, latitude, displayName) {
 function Weather(description, time) {
   this.forecast = description;
   this.time = time
+}
+
+function Park(name, address, fee, description, url) {
+  this.name = name;
+  this.address = address;
+  this.fee = fee;
+  this.description = description;
+  this.url = url;
 }
 
 

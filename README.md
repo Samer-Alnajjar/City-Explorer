@@ -89,3 +89,16 @@ Start time: 3:00
 Finish time: 5:00
 
 Actual time needed to complete: 2:00
+
+===========================================================
+
+
+Number and name of feature: Parks data from API
+
+Estimate of time needed to complete: 2 hour
+
+Start time: 5:00
+
+Finish time: 7:00
+
+Actual time needed to complete: 2:00
