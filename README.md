@@ -34,6 +34,10 @@ provide the client th ability to search for cities names and provide him the wea
 
 - 2/21/2021 4:30 Pm - Application now has a function to send the weather data when accessing the weather route.
 
+- 2/22/2021 6:00 Pm - Application now has a function to fetch the weather, the location, and the parks data from an API.
+
+- 2/23/2021 7:30 Pm - Application now has a database to store the weather, the location, and the parks data that comes from an API.
+
 ## Credits and Collaborations
 <!-- Give credit (and a link) to other people or resources that helped you build this application. -->
 
@@ -110,8 +114,8 @@ Number and name of feature: Add a database
 
 Estimate of time needed to complete: 2 hour
 
-Start time: 4:00
+Start time: 4:30
 
-Finish time: 6:00
+Finish time: 7:30
 
-Actual time needed to complete: 
+Actual time needed to complete: 3:00 
