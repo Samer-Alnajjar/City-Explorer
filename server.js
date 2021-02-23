@@ -12,7 +12,8 @@ const pg = require("pg");
 const app = express();
 app.use(cors());
 require("dotenv").config();
-const client = new pg.Client(process.env.DATABASE_URL);
+// const client = new pg.Client(process.env.DATABASE_URL);
+const client = new pg.Client({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
 
 const PORT = process.env.PORT;
 
