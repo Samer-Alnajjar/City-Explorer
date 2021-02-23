@@ -4,6 +4,7 @@
 const express = require("express");
 const cors = require('cors');
 const superagent = require('superagent');
+const pg = require("pg");
 
 
 //Initialization and configuration 
@@ -11,6 +12,7 @@ const superagent = require('superagent');
 const app = express();
 app.use(cors());
 require("dotenv").config();
+const client = new pg.Client(process.env.DATABASE_URL);
 
 const PORT = process.env.PORT;
 
@@ -29,24 +31,23 @@ app.get('*', (req, res) => {
   res.status(404).send('Sorry, the page you are trying to access does not exist....');
 });
 
-
-// weatherHandler function
-function handleWeather(req, res) {
-  // Get the data from req
-  let searchQuery = req.query.search_query;
-  // let searchQuery2 = req.query.longitude;
-  // console.log(searchQuery);
-  // Accessing the weather.json and store it in weatherData
-  getWeatherData(searchQuery, res);
-}
+// Handlers
 
 // locationHandler function
 function handleLocation(req, res) {
   // Get the data array from JSON
   let searchQuery = req.query.city;
-  // Accessing the location.json and store it in locationData
-  getLocationData(searchQuery, res);
+  // Check database 
+  checkDataBase(searchQuery, res);
   // res.status(200).send(locationObject);
+}
+
+// weatherHandler function
+function handleWeather(req, res) {
+  // Get the data from req
+  let searchQuery = req.query.search_query;
+  // Accessing the weather.json and store it in weatherData
+  getWeatherData(searchQuery, res);
 }
 
 // parkHandler function
@@ -58,40 +59,62 @@ function handlePark(req, res) {
   // res.status(200).send(locationObject);
 }
 
-function getParksData(searchQuery, res) {
+// Getting the data 
+
+// Handle location data from function
+function getLocationData(searchQuery, res) {
 
   // Using Data from API
-  let query = {
+  const query = {
+    key: process.env.GEOCODE_API_KEY,
     q: searchQuery,
-    api_key: process.env.PARKS_API_KEY
-  };
-  let url = "https://developer.nps.gov/api/v1/parks";
-  superagent.get(url).query(query).then((parkData) => {
+    limit: 1,
+    format: 'json'
+  }
+
+  let url = `https://us1.locationiq.com/v1/search.php`
+  superagent.get(url).query(query).then(data => {
+    // It's recommended to log the data to see the structure of the data you are getting
+    // We added .body because it will retain the header and the body and for now we need just the body
+
+    // Checking if my code is correct
     try {
-      let parksArray = parkData.body.data;
-      let arrayOfObjects = [];
+      // Getting the data from the object
+      let longitude = data.body[0].lon;
+      let latitude = data.body[0].lat;
+      let displayName = data.body[0].display_name;
 
-      parksArray.forEach(value => {
-        let name = value.fullName;
-        let address = value.addresses[0].line1 + " " + value.addresses[0].city + " " + value.addresses[0].stateCode + " " + value.addresses[0].postalCode;
-        console.log(address);
-        let fee = value.entranceFees[0].cost;
-        let description = value.description;
-        let url = value.url;
-        let responseObject = new Park(name, address, fee, description, url);
-        arrayOfObjects.push(responseObject);
-        console.log(arrayOfObjects);
+      let dbQuery = `INSERT INTO city(search_query, display_name , lon, lat) VALUES ($1, $2 ,$3, $4)`;
+      
+      let secureValue = [searchQuery, displayName, longitude, latitude];
+
+      client.query(dbQuery, secureValue).then(() => {
+        console.log(`the city ${searchQuery} added to the database`);
+      }).catch(error => {
+        res.status(400).send("Something went wrong from the database" + error);
       })
-      res.status(200).send(arrayOfObjects);
+
+      // Creating an object using these data
+      let responseObject = new CityLocation(searchQuery, longitude, latitude, displayName);
+      res.status(200).send(responseObject);
+      return responseObject;
     } catch {
-      res.status(500).send("Sorry, something went wrong");
+      res.status(500).send("Sorry, something went wrong from inner CATCH");
     }
-  }).catch((error) => {
-    res.status(500).send("Sorry, something went wrong from promise" + error);
+  }).catch(() => {
+    res.status(500).send("Sorry, something went wrong from PROMISE");
   });
+
+  // Old code (lab-06)
+  // let locationData = require("./data/location.json");
+  // // Get values from object
+  // let longitude = locationData[0].lon;
+  // let latitude = locationData[0].lat;
+  // let displayName = locationData[0].display_name;
+  // // create data object  
+  // let responseObject = new CityLocation(searchQuery, longitude, latitude, displayName);
+  // return responseObject;
 }
-
-
 
 // Handle weather data from function
 function getWeatherData(searchQuery, res) {
@@ -107,7 +130,7 @@ function getWeatherData(searchQuery, res) {
       let weatherArray = weatherData.body.data;
       let arrayOfObjects = [];
 
-      weatherArray.map((value) => {
+      weatherArray.map(value => {
         let currentDate = new Date(value.valid_date).toString();
         let modifiedDate = currentDate.split(" ").splice(0, 4).join(" ");
         let responseObject = new Weather(value.weather.description, modifiedDate);
@@ -134,49 +157,36 @@ function getWeatherData(searchQuery, res) {
   // return arrayOfObjects;
 }
 
-
-// Handle location data from function
-function getLocationData(searchQuery, res) {
+// Handle parks data from function
+function getParksData(searchQuery, res) {
 
   // Using Data from API
-  const query = {
-    key: process.env.GEOCODE_API_KEY,
+  let query = {
     q: searchQuery,
-    limit: 1,
-    format: 'json'
-  }
-
-  let url = `https://us1.locationiq.com/v1/search.php`
-  superagent.get(url).query(query).then(data => {
-    // It's recommended to log the data to see the structure of the data you are getting
-    // We added .body because it will retain the header and the body and for now we need just the body
-
-    // Checking if my code is correct
+    api_key: process.env.PARKS_API_KEY
+  };
+  let url = "https://developer.nps.gov/api/v1/parks";
+  superagent.get(url).query(query).then((parkData) => {
     try {
-      // Getting the data from the object
-      let longitude = data.body[0].lon;
-      let latitude = data.body[0].lat;
-      let displayName = data.body[0].display_name;
+      let parksArray = parkData.body.data;
+      let arrayOfObjects = [];
 
-      // Creating an object using these data
-      let responseObject = new CityLocation(searchQuery, longitude, latitude, displayName);
-      res.status(200).send(responseObject);
+      parksArray.forEach(value => {
+        let name = value.fullName;
+        let address = value.addresses[0].line1 + " " + value.addresses[0].city + " " + value.addresses[0].stateCode + " " + value.addresses[0].postalCode;
+        let fee = value.entranceFees[0].cost;
+        let description = value.description;
+        let url = value.url;
+        let responseObject = new Park(name, address, fee, description, url);
+        arrayOfObjects.push(responseObject);
+      })
+      res.status(200).send(arrayOfObjects);
     } catch {
       res.status(500).send("Sorry, something went wrong");
     }
-  }).catch(() => {
-    res.status(500).send("Sorry, something went wrong");
+  }).catch((error) => {
+    res.status(500).send("Sorry, something went wrong from promise" + error);
   });
-
-  // Old code (lab-06)
-  // let locationData = require("./data/location.json");
-  // // Get values from object
-  // let longitude = locationData[0].lon;
-  // let latitude = locationData[0].lat;
-  // let displayName = locationData[0].display_name;
-  // // create data object  
-  // let responseObject = new CityLocation(searchQuery, longitude, latitude, displayName);
-  // return responseObject;
 }
 
 // Constructors
@@ -200,8 +210,37 @@ function Park(name, address, fee, description, url) {
   this.url = url;
 }
 
+// Check the database
+function checkDataBase(searchQuery, res) {
+  let dataBaseQuery = `SELECT * FROM city WHERE search_query='${searchQuery}'`;
+  client.query(dataBaseQuery).then(data => {
+    if(data.rows.length === 0) {
+      console.log(data.rows);
+      console.log("Fetching data from API");
+      getLocationData(searchQuery, res)
+    } else {
+      console.log("Fetching data from Database");
+
+      let dbQuery = `SELECT * FROM city WHERE search_query='${searchQuery}'`;
+      
+      client.query(dbQuery).then((data) => {
+        let databaseData = data.rows[0];
+        let locationObject = new CityLocation(databaseData.search_query, databaseData.lon, databaseData.lat , databaseData.display_name);
+        res.status(200).send(locationObject);
+      }).catch(error => {
+        res.status(400).send("Something went wrong from the database" + error);
+      })
+    }
+  })
+}
+
 
 // Listener
-app.listen(PORT, () => {
-  console.log(`The server is listening to PORT ${PORT}`);
+
+client.connect().then(()=> {
+  app.listen(PORT, () => {
+    console.log(`The server is listening to PORT ${PORT}`);
+  });
+}).catch(() => {
+  console.log("An error occurred while connecting the database");
 });
