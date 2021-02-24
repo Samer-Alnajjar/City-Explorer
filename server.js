@@ -31,6 +31,9 @@ app.get("/parks", handlePark);
 // Movie routes
 app.get("/movies", handleMovies);
 
+// Yelp routes
+app.get("/yelp", handleYelp);
+
 // Any other routes
 app.get('*', (req, res) => {
   res.status(404).send('Sorry, the page you are trying to access does not exist....');
@@ -69,6 +72,12 @@ function handleMovies(req, res) {
   let searchQuery = req.query.search_query;
   // Accessing the data from the movie API
   getMoviesData(searchQuery, res);
+}
+
+function handleYelp(req, res) {
+  let searchQuery = req.query.search_query;
+  // Accessing the data from the yelp API
+  getYelpData(searchQuery, req, res);
 }
 
 // Getting the data 
@@ -237,6 +246,44 @@ function getMoviesData(searchQuery, res) {
   })
 }
 
+// Handle yelp data from function
+function getYelpData(searchQuery, req,res) {
+  // Using data from API
+  let y = req.query.page;
+  let x = 0 +(y * 5);
+  let query = {
+    term: "restaurants",
+    location: searchQuery,
+    limit: 5,
+    offset: x
+  }
+
+  let key={Authorization : `Bearer ${process.env.YELP_API_KEY}`}
+
+  let url = `https://api.yelp.com/v3/businesses/search`
+  superagent.get(url).set(key).query(query).then(yelpData => {
+    try {
+      let yelpArray = yelpData.body.businesses;
+      let arrayOfObject = [];
+
+      yelpArray.map(value => {
+        let name = value.name;
+        let image_URL = value.image_url;
+        let price = value.price;
+        let rating = value.rating;
+        let url = value.url;
+        let resObject = new Yelp(name, image_URL, price, rating, url);
+        arrayOfObject.push(resObject);
+      })
+      res.status(200).send(arrayOfObject);
+    } catch {
+      res.status(500).send("Error from inner catch");
+    }
+  }).catch (error => {
+    res.status(500).send("Error from promise error", error);
+  })
+}
+
 // Constructors
 function CityLocation(searchQuery, longitude, latitude, displayName) {
   this.search_query = searchQuery;
@@ -266,6 +313,14 @@ function Movie(title, overview, avgVotes, totVotes, image, popularity, released)
   this.image_url = image;
   this.popularity = popularity;
   this.released_on = released;
+}
+
+function Yelp(name, image_url, price, rating, url) {
+  this.name = name;
+  this.image_url = image_url;
+  this.price = price;
+  this.rating = rating;
+  this.url = url;
 }
 
 // Check the database
