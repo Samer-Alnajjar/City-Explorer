@@ -5,6 +5,7 @@ const express = require("express");
 const cors = require('cors');
 const superagent = require('superagent');
 const pg = require("pg");
+const { search } = require("superagent");
 
 
 //Initialization and configuration 
@@ -12,8 +13,8 @@ const pg = require("pg");
 const app = express();
 app.use(cors());
 require("dotenv").config();
-// const client = new pg.Client(process.env.DATABASE_URL);
-const client = new pg.Client({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
+const client = new pg.Client(process.env.DATABASE_URL);
+// const client = new pg.Client({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
 
 const PORT = process.env.PORT;
 
@@ -26,6 +27,9 @@ app.get("/weather", handleWeather);
 
 // parks routes
 app.get("/parks", handlePark);
+
+// Movie routes
+app.get("/movies", handleMovies);
 
 // Any other routes
 app.get('*', (req, res) => {
@@ -58,6 +62,13 @@ function handlePark(req, res) {
   // Accessing the location.json and store it in locationData
   getParksData(searchQuery, res);
   // res.status(200).send(locationObject);
+}
+
+// Movies function
+function handleMovies(req, res) {
+  let searchQuery = req.query.search_query;
+  // Accessing the data from the movie API
+  getMoviesData(searchQuery, res);
 }
 
 // Getting the data 
@@ -190,6 +201,42 @@ function getParksData(searchQuery, res) {
   });
 }
 
+// Handle movie data from function
+function getMoviesData(searchQuery, res) {
+
+  // Using data from API
+  let query={
+    api_key: process.env.MOVIE_API_KEY,
+    query: searchQuery,
+  }
+
+  let url = `https://api.themoviedb.org/3/search/movie`;
+  superagent.get(url).query(query).then(movieData => {
+    try {
+      let moviesArray = movieData.body.results;
+      let arrayOfObjects = [];
+
+      moviesArray.forEach(value => {
+        let title = value.title;
+        let overview = value.overview
+        let avgVotes = value.vote_average;
+        let totVotes = value.vote_count;
+        let image = `https://image.tmdb.org/t/p/w500${value.poster_path}`;
+        let popularity = value.popularity;
+        let released = value.release_date;  
+        let responseObject = new Movie(title, overview, avgVotes, totVotes, image, popularity, released);
+        arrayOfObjects.push(responseObject);
+      })
+      res.status(200).send(arrayOfObjects);
+
+    } catch {
+      console.log('Sorry something idiot happened (from internal catch)');
+    }
+  }).catch(error=> {
+    console.log('Sorry ann error occurred, Error from catch ');
+  })
+}
+
 // Constructors
 function CityLocation(searchQuery, longitude, latitude, displayName) {
   this.search_query = searchQuery;
@@ -211,9 +258,19 @@ function Park(name, address, fee, description, url) {
   this.url = url;
 }
 
+function Movie(title, overview, avgVotes, totVotes, image, popularity, released) {
+  this.title = title;
+  this.overview = overview;
+  this.average_votes =  avgVotes;
+  this.total_votes = totVotes;
+  this.image_url = image;
+  this.popularity = popularity;
+  this.released_on = released;
+}
+
 // Check the database
 function checkDataBase(searchQuery, res) {
-  let dataBaseQuery = `SELECT * FROM city WHERE search_query='${searchQuery}'`;
+  let dataBaseQuery = `SELECT * FROM city WHERE search_query='${searchQuery}';`;
   client.query(dataBaseQuery).then(data => {
     if(data.rows.length === 0) {
       console.log(data.rows);
@@ -242,6 +299,6 @@ client.connect().then(()=> {
   app.listen(PORT, () => {
     console.log(`The server is listening to PORT ${PORT}`);
   });
-}).catch(() => {
-  console.log("An error occurred while connecting the database");
+}).catch((error) => {
+  console.log("An error occurred while connecting the database", error);
 });
