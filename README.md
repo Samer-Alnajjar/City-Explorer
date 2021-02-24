@@ -119,3 +119,16 @@ Start time: 4:30
 Finish time: 7:30
 
 Actual time needed to complete: 3:00 
+
+===========================================================
+
+
+Number and name of feature: Add a movie API
+
+Estimate of time needed to complete: 2 hour
+
+Start time: 1:30
+
+Finish time: 2:30
+
+Actual time needed to complete: 1:00 
