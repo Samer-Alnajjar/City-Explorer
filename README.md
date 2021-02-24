@@ -132,3 +132,29 @@ Start time: 1:30
 Finish time: 2:30
 
 Actual time needed to complete: 1:00 
+
+===========================================================
+
+
+Number and name of feature: Add a Yelp API
+
+Estimate of time needed to complete: 2 hour
+
+Start time: 4:30
+
+Finish time: 5:00
+
+Actual time needed to complete: 0:30
+
+===========================================================
+
+
+Number and name of feature: Add a pagination
+
+Estimate of time needed to complete: 15 minutes
+
+Start time: 5:00
+
+Finish time: 5:15
+
+Actual time needed to complete: 0:15 
