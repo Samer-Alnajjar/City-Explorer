@@ -216,7 +216,7 @@ function getMoviesData(searchQuery, res) {
       let moviesArray = movieData.body.results;
       let arrayOfObjects = [];
 
-      moviesArray.forEach(value => {
+      moviesArray.map(value => {
         let title = value.title;
         let overview = value.overview
         let avgVotes = value.vote_average;
